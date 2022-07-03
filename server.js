@@ -123,14 +123,14 @@ const addRole = function () {
     inquirer
         .prompt([
           {
-            name: 'departmentName',
-            type: 'list',
-            message: 'Which department is this new role in?',
+            name: "departmentName",
+            type: "list",
+            message: "Which department is the new role?",
             choices: departmentNamesArray
           }
         ])
         .then(function(answer) {
-          if (answer.departmentName === 'Create Department') {
+          if (answer.departmentName === "Create Department") {
             addDepartment();
           } else {
             continueAddingRole(answer);
@@ -141,14 +141,14 @@ const addRole = function () {
       inquirer
           .prompt([
             {
-              name: 'newRole',
-              type: 'input',
-              message: 'What is the name of your new role?',
+              name: "newRole",
+              type: "input",
+              message: "What is the name of the new role?",
             },
             {
-              name: 'salary',
-              type: 'input',
-              message: 'What is the salary of this new role?',
+              name: "salary",
+              type: "input",
+              message: "What is the salary of the new role?",
             }
           ])
           .then(function (answer) {
@@ -169,13 +169,14 @@ const addRole = function () {
     }
   })
 
+// Add Department
   const addDepartment = () => {
     inquirer
       .prompt([
         {
-          name: 'newDepartment',
-          type: 'input',
-          message: 'What is the name of your new Department?',
+          name: "newDepartment",
+          type: "input",
+          message: "What is the name of your new Department?",
         }
       ])
       .then(function (answer) {
@@ -188,6 +189,63 @@ const addRole = function () {
 };
 }
 
+// Add an Employee
+const addEmployee = () => {
+  inquirer.prompt([
+    {
+      type: "input",
+      name: "firstName",
+      message: "What is the employee's first name?"
+    },
+    {
+      type: "input",
+      name: "lastName",
+      message: "What is the employee's last name?"
+    }
+  ])
+  .then(function (answer) {
+    let newEmployeeName = [answer.firstName, answer.lastName]
+    let sql = `SELECT roles.id, roles.title FROM roles`;
+    db.query(sql, (error, data) => {
+      if (error) throw error;
+      let roles = data.map (({id, title}) => ({name: title, value: id}));
+      inquirer.prompt([
+        {
+          type: "list",
+          name: "role",
+          message: "What is the employee's role?",
+          choices: roles
+        }
+      ])
+        .then(function (answer) {
+          let newEmployeeRole = answer.newEmployeeRole;
+          newEmployeeName.push(newEmployeeRole);
+          let sql = `SELECT * FROM employees`;
+          db.query(sql, (error, data) => {
+            if (error) throw error;
+            let managers = data.map(({id, first_name, last_name}) => ({name: first_name + " " + last_name, value:id}));
+            inquirer.prompt([
+              {
+                type: "list",
+                name: "manager",
+                message: "Who is the employees manager?",
+                choices: managers
+              }
+            ])
+              .then(function (answer) {
+                let manager = answer.manager;
+                newEmployeeName.push(manager);
+                const sql = `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
+                db.query(sql, newEmployeeName, (error) => {
+                  if (error) throw error;
+                  console.log("New employee was added")
+                  viewAllEmployees();
+                });
+              });
+          });
+        });
+    });
+  });
+};
 
-
-
+// Update Employee Role
