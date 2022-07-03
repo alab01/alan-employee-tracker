@@ -85,7 +85,11 @@ const viewAllRoles = function () {
 
 //View All Employees
 const viewAllEmployees = function () {
-  const sql = `SELECT * FROM employees`;
+  const sql = `SELECT employees.id, employees.first_name, employees.last_name, roles.title, departments.name AS 'department', roles.salary
+  FROM employees, roles, departments WHERE departments.id = roles.id AND roles.id = employees.id ORDER BY employees.id ASC`;
+
+
+  // const sql = `SELECT * FROM employees`;
   db.query(sql, (error, response) => {
     if (error) throw error;
     console.table(response);
@@ -170,7 +174,7 @@ const addRole = function () {
   })
 
 // Add Department
-  const addDepartment = () => {
+  const addDepartment = function () {
     inquirer
       .prompt([
         {
@@ -190,7 +194,7 @@ const addRole = function () {
 }
 
 // Add an Employee
-const addEmployee = () => {
+const addEmployee = function () {
   inquirer.prompt([
     {
       type: "input",
@@ -218,7 +222,7 @@ const addEmployee = () => {
         }
       ])
         .then(function (answer) {
-          let newEmployeeRole = answer.newEmployeeRole;
+          let newEmployeeRole = answer.role;
           newEmployeeName.push(newEmployeeRole);
           let sql = `SELECT * FROM employees`;
           db.query(sql, (error, data) => {
@@ -234,7 +238,7 @@ const addEmployee = () => {
             ])
               .then(function (answer) {
                 let manager = answer.manager;
-                newEmployeeName.push(manager);
+                newEmployeeName.push(manager);              
                 const sql = `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
                 db.query(sql, newEmployeeName, (error) => {
                   if (error) throw error;
@@ -249,3 +253,66 @@ const addEmployee = () => {
 };
 
 // Update Employee Role
+const updateEmployeeRole = function () {
+  const sql = `SELECT employees.id AS "employee_id", employees.first_name, employees.last_name, roles.id AS "role_id" FROM employees, roles, departments WHERE departments.id = roles.department_id AND roles.id = employees.role_id`;
+  db.query(sql, (error, employeeData) => {
+    if (error) throw error;
+    const employeeNamesArray = [];
+    employeeData.forEach((employee) => {employeeNamesArray.push(`${employee.first_name} ${employee.last_name}`);
+    });
+
+    console.log(employeeData);
+
+    const sql = `SELECT roles.id, roles.title FROM roles`;
+    db.query(sql, (error, rolesData) => {
+      if (error) throw error;
+        const rolesArray = [];
+        rolesData.forEach((role) => {rolesArray.push(role.title);
+        });
+
+        console.log(rolesData);
+
+        inquirer
+          .prompt([
+            {
+              name: 'chosenEmployee',
+              type: 'list',
+              message: 'Which employee has a new role?',
+              choices: employeeNamesArray
+            },
+            {
+              name: 'chosenRole',
+              type: 'list',
+              message: 'What is their new role?',
+              choices: rolesArray
+            }
+          ])
+          .then((answer) => {
+            let newTitleId, employeeId;
+
+            rolesData.forEach((role) => {
+              if (answer.chosenRole === role.title) {
+                newTitleId = role.id;
+              }
+            });
+
+            employeeData.forEach((employee) => {
+              if (
+                answer.chosenEmployee === `${employee.first_name} ${employee.last_name}`
+              ) {
+                employeeId = employee.id;
+              }
+            });
+
+            console.log(rolesData);
+            console.log(employeeData);
+            const updatesql = `UPDATE employees SET employees.role_id = ? WHERE employees.id = ?`;
+            db.query(updatesql, [newTitleId, employeeId], (error) => {
+              if (error) throw error;
+              viewAllEmployees();
+            })
+    });
+
+  });
+});
+};
