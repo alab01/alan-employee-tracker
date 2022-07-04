@@ -85,11 +85,11 @@ const viewAllRoles = function () {
 
 //View All Employees
 const viewAllEmployees = function () {
-  const sql = `SELECT employees.id, employees.first_name, employees.last_name, roles.title, departments.name AS 'department', roles.salary
-  FROM employees, roles, departments WHERE departments.id = roles.id AND roles.id = employees.id ORDER BY employees.id ASC`;
+  // const sql = `SELECT employees.id, employees.first_name, employees.last_name, employees.manager_id AS 'manager', roles.title, departments.name AS 'department', roles.salary
+  // FROM employees, roles, departments WHERE departments.id = roles.id AND roles.id = employees.id ORDER BY employees.id ASC`;
 
 
-  // const sql = `SELECT * FROM employees`;
+  const sql = `SELECT * FROM employees`;
   db.query(sql, (error, response) => {
     if (error) throw error;
     console.table(response);
@@ -208,11 +208,11 @@ const addEmployee = function () {
     }
   ])
   .then(function (answer) {
-    let newEmployeeName = [answer.firstName, answer.lastName]
-    let sql = `SELECT roles.id, roles.title FROM roles`;
-    db.query(sql, (error, data) => {
+    const newEmployeeName = [answer.firstName, answer.lastName]
+    const rsql = `SELECT roles.id, roles.title FROM roles`;
+    db.query(rsql, (error, data) => {
       if (error) throw error;
-      let roles = data.map (({id, title}) => ({name: title, value: id}));
+      const roles = data.map (({id, title}) => ({name: title, value: id}));
       inquirer.prompt([
         {
           type: "list",
@@ -222,12 +222,12 @@ const addEmployee = function () {
         }
       ])
         .then(function (answer) {
-          let newEmployeeRole = answer.role;
+          const newEmployeeRole = answer.role;
           newEmployeeName.push(newEmployeeRole);
-          let sql = `SELECT * FROM employees`;
+          const sql = `SELECT * FROM employees`;
           db.query(sql, (error, data) => {
             if (error) throw error;
-            let managers = data.map(({id, first_name, last_name}) => ({name: first_name + " " + last_name, value:id}));
+            const managers = data.map(({id, first_name, last_name}) => ({name: first_name + " " + last_name, value:id}));
             inquirer.prompt([
               {
                 type: "list",
@@ -237,10 +237,10 @@ const addEmployee = function () {
               }
             ])
               .then(function (answer) {
-                let manager = answer.manager;
+                const manager = answer.manager;
                 newEmployeeName.push(manager);              
-                const sql = `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
-                db.query(sql, newEmployeeName, (error) => {
+                const emsql = `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
+                db.query(emsql, newEmployeeName, (error) => {
                   if (error) throw error;
                   console.log("New employee was added")
                   viewAllEmployees();
@@ -303,9 +303,6 @@ const updateEmployeeRole = function () {
                 employeeId = employee.id;
               }
             });
-
-            console.log(rolesData);
-            console.log(employeeData);
             const updatesql = `UPDATE employees SET employees.role_id = ? WHERE employees.id = ?`;
             db.query(updatesql, [newTitleId, employeeId], (error) => {
               if (error) throw error;
