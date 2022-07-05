@@ -260,17 +260,12 @@ const updateEmployeeRole = function () {
     const employeeNamesArray = [];
     employeeData.forEach((employee) => {employeeNamesArray.push(`${employee.first_name} ${employee.last_name}`);
     });
-
-    console.log(employeeData);
-
     const sql = `SELECT roles.id, roles.title FROM roles`;
     db.query(sql, (error, rolesData) => {
       if (error) throw error;
         const rolesArray = [];
         rolesData.forEach((role) => {rolesArray.push(role.title);
         });
-
-        console.log(rolesData);
 
         inquirer
           .prompt([
@@ -300,7 +295,7 @@ const updateEmployeeRole = function () {
               if (
                 answer.chosenEmployee === `${employee.first_name} ${employee.last_name}`
               ) {
-                employeeId = employee.id;
+                employeeId = employee.employee_id;
               }
             });
             const updatesql = `UPDATE employees SET employees.role_id = ? WHERE employees.id = ?`;
